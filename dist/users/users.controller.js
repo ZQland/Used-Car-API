@@ -19,12 +19,30 @@ const users_service_1 = require("./users.service");
 const update_user_dto_1 = require("./dtos/update-user.dto");
 const serialize_interceptor_1 = require("../interceptors/serialize.interceptor");
 const user_dto_1 = require("./dtos/user.dto");
+const auth_service_1 = require("./auth.service");
+const current_user_decorator_1 = require("./decorators/current-user.decorator");
+const current_user_interceptor_1 = require("./interceptors/current-user.interceptor");
+const user_entity_1 = require("./user.entity");
 let UsersController = class UsersController {
-    constructor(usersService) {
+    constructor(usersService, authService) {
         this.usersService = usersService;
+        this.authService = authService;
     }
-    createUser(body) {
-        this.usersService.create(body.email, body.password);
+    whoAmI(user) {
+        return user;
+    }
+    singOut(session) {
+        session.userId = null;
+    }
+    async createUser(body, session) {
+        const user = await this.authService.signup(body.email, body.password);
+        session.userId = user.id;
+        return user;
+    }
+    async signin(body, session) {
+        const user = await this.authService.signin(body.email, body.password);
+        session.userId = user.id;
+        return user;
     }
     async findUser(id) {
         const user = await this.usersService.findOne(parseInt(id));
@@ -44,12 +62,35 @@ let UsersController = class UsersController {
     }
 };
 __decorate([
+    (0, common_1.Get)('/whoami'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [user_entity_1.User]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "whoAmI", null);
+__decorate([
+    (0, common_1.Post)('/signout'),
+    __param(0, (0, common_1.Session)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "singOut", null);
+__decorate([
     (0, common_1.Post)('/signup'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Session)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto, Object]),
+    __metadata("design:returntype", Promise)
 ], UsersController.prototype, "createUser", null);
+__decorate([
+    (0, common_1.Post)('signin'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Session)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "signin", null);
 __decorate([
     (0, common_1.Get)('/:id'),
     __param(0, (0, common_1.Param)('id')),
@@ -82,7 +123,9 @@ __decorate([
 UsersController = __decorate([
     (0, common_1.Controller)('auth'),
     (0, serialize_interceptor_1.Serialize)(user_dto_1.UserDto),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
+    (0, common_1.UseInterceptors)(current_user_interceptor_1.CurrentUserInterceptor),
+    __metadata("design:paramtypes", [users_service_1.UsersService,
+        auth_service_1.AuthService])
 ], UsersController);
 exports.UsersController = UsersController;
 //# sourceMappingURL=users.controller.js.map
