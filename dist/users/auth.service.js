@@ -38,7 +38,7 @@ let AuthService = class AuthService {
         const [salt, storedHash] = user.password.split('.');
         const hash = (await scrypt(password, salt, 32));
         if (storedHash !== hash.toString('hex')) {
-            throw new common_1.NotFoundException('Incorrect password!');
+            throw new common_1.BadRequestException('Incorrect password!');
         }
         return user;
     }

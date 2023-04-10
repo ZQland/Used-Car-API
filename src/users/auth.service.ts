@@ -47,7 +47,7 @@ export class AuthService {
     const hash = (await scrypt(password, salt, 32)) as Buffer;
 
     if (storedHash !== hash.toString('hex')) {
-       throw new NotFoundException('Incorrect password!');
+       throw new BadRequestException('Incorrect password!');
 
     } 
     return user;
